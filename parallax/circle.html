@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Circle</title>
+  </head>
+  <body>
+    <div id="scene">
+      <svg viewBox="0 0 750 750">
+        <style type="text/css">
+          .st0 {
+            fill: #f2f2f2;
+          }
+          .st1 {
+            fill: #c2c2c2;
+          }
+          .st2 {
+            fill: #939393;
+          }
+          .st3 {
+            fill: #636363;
+          }
+          .st4 {
+            fill: #333333;
+          }
+        </style>
+        <g class="layer" data-depth="0.1">
+          <circle class="st0" cx="375" cy="350" r="300" />
+        </g>
+        <g class="layer" data-depth="0.3">
+          <circle class="st1" cx="375" cy="350" r="240" />
+        </g>
+        <g class="layer" data-depth="0.5">
+          <circle class="st2" cx="375" cy="350" r="180" />
+        </g>
+        <g class="layer" data-depth="0.7">
+          <circle class="st3" cx="375" cy="350" r="120" />
+        </g>
+        <g class="layer" data-depth="0.9">
+          <circle class="st4" cx="375" cy="350" r="60" />
+        </g>
+      </svg>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/parallax-js@3.1.0/dist/parallax.min.js"></script>
+    <script>
+      let scene = document.getElementById("scene");
+      let parallaxInstance = new Parallax(scene, {
+        selector: ".layer"
+      });
+    </script>
+  </body>
+</html>

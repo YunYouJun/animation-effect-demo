@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D3 Demo</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .circle-img {
+        stroke: #6200ee;
+        stroke-width: 2px;
+      }
+      .line-text {
+        font-size: 1rem;
+        fill: #0000ff;
+        fill-opacity: 1;
+      }
+      path {
+        fill: none;
+        stroke: #666;
+        stroke-width: 2px;
+      }
+      .path-text {
+        stroke: #6200ee;
+      }
+    </style>
+  </head>
+  <body>
+    <script
+      src="https://cdn.jsdelivr.net/npm/d3/d3.min.js"
+      charset="utf-8"
+    ></script>
+    <script>
+      let relations = {
+        nodes: [
+          { name: "Chen", image: "https://yunyoujun.cn/images/chen.jpg" },
+          { name: "YangYan", image: "https://yunyoujun.cn/images/yangyan.jpg" }
+        ],
+        edges: [{ source: 1, target: 0, relation: "LOVE" }]
+      };
+
+      let width = window.innerWidth;
+      let height = window.innerHeight - 5;
+      let img_w = 80;
+      let img_h = 80;
+      // 图片圆形半径
+      let radius = 40;
+
+      let svg = d3
+        .select("body")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      // d3.json("./relation.json", function(error, root) {
+      let root = relations;
+      let force = d3.layout
+        .force()
+        .nodes(root.nodes)
+        .links(root.edges)
+        .size([width, height])
+        .linkDistance(300)
+        .start();
+
+      // 边
+      // let edges_line = svg
+      //   .selectAll("path")
+      //   .data(root.edges)
+      //   .enter()
+      //   .append("path")
+      //   .style("stroke", "#666")
+      //   .style("stroke-width", 2);
+
+      let edges_path = svg
+        .selectAll("path")
+        .data(root.edges)
+        .enter()
+        .append("path")
+        .attr("id", function(d, i) {
+          return "edgepath" + i;
+        })
+        .attr("class", "edges")
+        .style("stroke", "#666")
+        .style("stroke-width", 2);
+
+      // let edges_text = svg
+      //   .selectAll(".line-text")
+      //   .data(root.edges)
+      //   .enter()
+      //   .append("text")
+      //   .attr("class", "line-text")
+      //   .attr("text-anchor", "middle")
+      //   .attr("startOffset", "50%")
+      //   .text(function(d) {
+      //     return d.relation;
+      //   });
+
+      let pathtext = svg
+        .selectAll(".path-text")
+        .data(root.edges)
+        .enter()
+        .append("text")
+        .attr("class", "path-text")
+        .append("textPath")
+        .attr("text-anchor", "middle") //居中
+        .attr("startOffset", "50%")
+        .attr("xlink:href", function(d, i) {
+          return "#edgepath" + i;
+        })
+        .text(function(d) {
+          return d.relation;
+        });
+
+      // 添加箭头
+      let defs = svg.append("defs");
+      let arrowMarker = defs
+        .append("marker")
+        .attr("id", "arrow")
+        .attr("markerUnits", "strokeWidth")
+        .attr("markerWidth", "12")
+        .attr("markerHeight", "12")
+        .attr("viewBox", "0 0 12 12")
+        .attr("refX", radius - 10)
+        .attr("refY", 6)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M2,2 L10,6 L2,10 L6,6 L2,2")
+        .attr("fill", "#000");
+
+      // 挂载在线条上
+      svg
+        .selectAll("path")
+        .attr("id", function(d, i) {
+          return "edgepath" + i;
+        })
+        .attr("class", "edges")
+        .attr("marker-mid", "url(#arrow)")
+        .attr("marker-end", "url(#arrow)");
+
+      // 圆形图片节点（人物头像）
+      let nodes_img = svg
+        .selectAll("image")
+        .data(root.nodes)
+        .enter()
+        .append("circle")
+        .attr("class", "circle-img")
+        .attr("r", radius)
+        .attr("fill", function(d, i) {
+          // 创建圆形图片
+          let defs = svg.append("defs").attr("id", "imgdefs");
+
+          let catpattern = defs
+            .append("pattern")
+            .attr("id", "catpattern" + i)
+            .attr("height", 1)
+            .attr("width", 1);
+
+          catpattern
+            .append("image")
+            .attr("x", -(img_w / 2 - radius))
+            .attr("y", -(img_h / 2 - radius))
+            .attr("width", img_w)
+            .attr("height", img_h)
+            .attr("xlink:href", d.image);
+
+          return "url(#catpattern" + i + ")";
+        })
+        .call(force.drag);
+
+      force.on("tick", function() {
+        // 限制结点的边界
+        root.nodes.forEach(function(d, i) {
+          d.x = d.x - img_w / 2 < 0 ? img_w / 2 : d.x;
+          d.x = d.x + img_w / 2 > width ? width - img_w / 2 : d.x;
+          d.y = d.y - img_h / 2 < 0 ? img_h / 2 : d.y;
+          d.y = d.y;
+        });
+
+        edges_path.attr("d", function(d) {
+          var dx = d.target.x - d.source.x; //增量
+          var dy = d.target.y - d.source.y;
+          return (
+            "M" +
+            d.source.x +
+            "," +
+            d.source.y +
+            "L" +
+            d.target.x +
+            "," +
+            d.target.y
+          );
+        });
+
+        // 更新连接线的位置
+        // edges_line.attr("x1", function(d) {
+        //   return d.source.x;
+        // });
+        // edges_line.attr("y1", function(d) {
+        //   return d.source.y;
+        // });
+        // edges_line.attr("x2", function(d) {
+        //   return d.target.x;
+        // });
+        // edges_line.attr("y2", function(d) {
+        //   return d.target.y;
+        // });
+
+        // 更新连接线上文字的位置
+        // edges_text.attr("x", function(d) {
+        //   return (d.source.x + d.target.x) / 2;
+        // });
+        // edges_text.attr("y", function(d) {
+        //   return (d.source.y + d.target.y) / 2;
+        // });
+
+        // 更新结点图片和文字
+        nodes_img.attr("cx", function(d) {
+          return d.x;
+        });
+        nodes_img.attr("cy", function(d) {
+          return d.y;
+        });
+      });
+      // });
+    </script>
+  </body>
+</html>
